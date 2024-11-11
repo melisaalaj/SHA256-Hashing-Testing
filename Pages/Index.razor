@@ -1,0 +1,40 @@
+﻿@page "/"
+@using System.Security.Cryptography
+@using System.Text
+
+<h3>SHA-256 Hash Testing App</h3>
+
+<div>
+    <label>Enter text to hash:</label>
+    <input @bind="InputText" placeholder="Enter text here" />
+    <button @onclick="ComputeHash">Compute Hash</button>
+</div>
+
+@if (!string.IsNullOrEmpty(HashResult))
+{
+    <p><strong>SHA-256 Hash:</strong> @HashResult</p>
+}
+
+@code {
+    private string InputText { get; set; } = string.Empty;
+    private string HashResult { get; set; } = string.Empty;
+
+    private void ComputeHash()
+    {
+        HashResult = ComputeSha256Hash(InputText);
+    }
+
+    private string ComputeSha256Hash(string rawData)
+    {
+        using (SHA256 sha256Hash = SHA256.Create())
+        {
+            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            StringBuilder builder = new StringBuilder();
+            foreach (byte b in bytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+            return builder.ToString();
+        }
+    }
+}
