@@ -1,0 +1,213 @@
+@page "/fileupload"
+@using System.Security.Cryptography
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="upload-container mb-4">
+    <h3 class="mb-4">SHA-256 Hash Calculator and Verifier</h3>
+
+    <!-- Hash Calculation Section -->
+    <div class="hash-calculation-section mb-4">
+        <h4 class="mb-3">Calculate Hash of a File</h4>
+        <InputFile OnChange="OnFileSelected" class="form-control mb-3" />
+        @if (selectedFile != null)
+        {
+            <div class="mb-3">
+                <p>Selected File: <strong>@selectedFile.Name</strong> (@(selectedFile.Size / 1024) KB)</p>
+            </div>
+        }
+        @if (isCalculating)
+        {
+            <button class="btn btn-primary mb-3" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Calculating...
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-primary mb-3" @onclick="CalculateHash" disabled="@(selectedFile == null)">
+                Calculate Hash
+            </button>
+        }
+        @if (!string.IsNullOrEmpty(hashResult))
+        {
+            <div class="alert alert-info mt-3">@hashResult</div>
+        }
+    </div>
+
+    <hr class="mb-4" />
+
+    <!-- Hash Verification Section -->
+    <div class="hash-verification-section mb-4">
+        <h4 class="mb-3">Verify File Against SHA-256 Hash</h4>
+        <div class="form-group mb-3">
+            <label for="knownHash">Enter Known SHA-256 Hash:</label>
+            <input type="text" id="knownHash" class="form-control" @bind="knownHash" maxlength="64" />
+        </div>
+        <InputFile OnChange="OnVerificationFileSelected" class="form-control mb-3" />
+        @if (verificationFile != null)
+        {
+            <div class="mb-3">
+                <p>Selected File: <strong>@verificationFile.Name</strong> (@(verificationFile.Size / 1024) KB)</p>
+            </div>
+        }
+        @if (isVerifying)
+        {
+            <button class="btn btn-primary mb-3" disabled>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Verifying...
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-primary mb-3" @onclick="VerifyHash" disabled="@(string.IsNullOrEmpty(knownHash) || verificationFile == null)">
+                Verify Hash
+            </button>
+        }
+        @if (!string.IsNullOrEmpty(verificationResult))
+        {
+            <div class="alert alert-info mt-3">@verificationResult</div>
+        }
+    </div>
+</div>
+
+@code {
+    // Variables for hash calculation
+    private IBrowserFile selectedFile;
+    private string hashResult;
+    private bool isCalculating = false;
+
+    // Variables for hash verification
+    private IBrowserFile verificationFile;
+    private string knownHash;
+    private string verificationResult;
+    private bool isVerifying = false;
+
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
+
+    // File selection for hash calculation
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        if (e.FileCount == 0)
+        {
+            hashResult = "No file selected.";
+            selectedFile = null;
+        }
+        else
+        {
+            selectedFile = e.File;
+            hashResult = string.Empty;
+        }
+    }
+
+    // Calculate hash of selected file
+    private async Task CalculateHash()
+    {
+        if (selectedFile == null)
+        {
+            hashResult = "Please select a file first.";
+            return;
+        }
+
+        if (selectedFile.Size > MaxFileSize)
+        {
+            hashResult = "Error: File size exceeds 10 MB limit.";
+            return;
+        }
+
+        isCalculating = true;
+        hashResult = string.Empty;
+
+        try
+        {
+            var computedHash = await ComputeFileHashAsync(selectedFile);
+            hashResult = $"SHA-256 Hash: {computedHash}";
+        }
+        catch (Exception ex)
+        {
+            hashResult = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isCalculating = false;
+        }
+    }
+
+    // File selection for hash verification
+    private void OnVerificationFileSelected(InputFileChangeEventArgs e)
+    {
+        if (e.FileCount == 0)
+        {
+            verificationResult = "No file selected.";
+            verificationFile = null;
+        }
+        else
+        {
+            verificationFile = e.File;
+            verificationResult = string.Empty;
+        }
+    }
+
+    // Verify hash of the selected file against the known hash
+    private async Task VerifyHash()
+    {
+        if (verificationFile == null)
+        {
+            verificationResult = "Please select a file first.";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(knownHash) || knownHash.Length != 64)
+        {
+            verificationResult = "Please enter a valid SHA-256 hash.";
+            return;
+        }
+
+        if (verificationFile.Size > MaxFileSize)
+        {
+            verificationResult = "Error: File size exceeds 10 MB limit.";
+            return;
+        }
+
+        isVerifying = true;
+        verificationResult = string.Empty;
+
+        try
+        {
+            var computedHash = await ComputeFileHashAsync(verificationFile);
+            if (string.Equals(computedHash, knownHash, StringComparison.OrdinalIgnoreCase))
+            {
+                verificationResult = "Success: The hashes match.";
+            }
+            else
+            {
+                verificationResult = "Failure: The hashes do not match.";
+            }
+        }
+        catch (Exception ex)
+        {
+            verificationResult = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isVerifying = false;
+        }
+    }
+
+    // Helper method to compute the SHA-256 hash of a file
+    private async Task<string> ComputeFileHashAsync(IBrowserFile file)
+    {
+        using var stream = file.OpenReadStream(MaxFileSize);
+        using var sha256 = SHA256.Create();
+
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) != 0)
+        {
+            sha256.TransformBlock(buffer, 0, bytesRead, null, 0);
+        }
+        sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+
+        var hashBytes = sha256.Hash;
+        return BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+    }
+}

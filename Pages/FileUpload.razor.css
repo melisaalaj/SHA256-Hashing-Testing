@@ -1,0 +1,32 @@
+.upload-container {
+    max-width: 600px;
+    margin: auto;
+}
+
+.hash-calculation-section,
+.hash-verification-section {
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+h4 {
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.alert {
+    word-break: break-all;
+}
+
+.btn {
+    min-width: 150px;
+}
+
+.spinner-border {
+    margin-right: 5px;
+}
