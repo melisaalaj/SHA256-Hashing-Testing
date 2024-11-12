@@ -30,4 +30,24 @@
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
+<script>
+    function showFullHashTooltip(element) {
+        const tooltip = document.createElement("div");
+        tooltip.className = "hash-tooltip";
+        tooltip.innerText = element.getAttribute("data-full-hash");
+        document.body.appendChild(tooltip);
+
+        const rect = element.getBoundingClientRect();
+        tooltip.style.left = `${rect.left + window.scrollX}px`;
+        tooltip.style.top = `${rect.bottom + window.scrollY}px`;
+    }
+
+    function removeFullHashTooltip() {
+        const tooltip = document.querySelector(".hash-tooltip");
+        if (tooltip) {
+            tooltip.remove();
+        }
+    }
+</script>
+
 </html>

@@ -96,6 +96,54 @@ a, .btn-link {
     inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
 }
 
-    .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Loading");
-    }
+.loading-progress-text:after {
+    content: var(--blazor-load-percentage-text, "Loading");
+}
+
+.hash-cell {
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    position: relative;
+}
+    
+.hash-tooltip {
+    position: absolute;
+    background-color: #f9f9f9;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    z-index: 1000;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 400px; 
+    white-space: normal; 
+    word-break: break-all; 
+    font-size: 0.875em;
+    color: #333;
+    pointer-events: none; 
+}
+
+.selected-algorithms {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.algorithm-tag {
+    background-color: #007bff;
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.algorithm-tag button {
+    background: none;
+    border: none;
+    color: #fff;
+    margin-left: 0.5rem;
+    cursor: pointer;
+    font-weight: bold;
+}

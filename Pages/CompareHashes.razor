@@ -1,0 +1,128 @@
+@page "/compare-hashes"
+@using System.Diagnostics
+@using System.Security.Cryptography
+
+<h3>Compare Hashes</h3>
+
+<div class="mb-3">
+    <label for="inputText" class="form-label">Input Text</label>
+    <input type="text" id="inputText" class="form-control" placeholder="Enter text here" @bind="inputText" />
+</div>
+
+<div class="mb-3">
+    <label for="algorithmSelection" class="form-label">Select Algorithms</label>
+    <select class="form-control" @onchange="OnAlgorithmSelected">
+        <option value="">Algorithms</option>
+        <option value="SHA-1">SHA-1</option>
+        <option value="SHA-256">SHA-256</option>
+        <option value="SHA-384">SHA-384</option>
+        <option value="SHA-512">SHA-512</option>
+    </select>
+</div>
+
+<div class="mb-3">
+    <div class="selected-algorithms">
+        @foreach (var algorithm in selectedAlgorithms)
+        {
+            <span class="algorithm-tag">@algorithm <button type="button" @onclick="() => RemoveAlgorithm(algorithm)">×</button></span>
+        }
+    </div>
+</div>
+
+<button class="btn btn-primary mb-3" @onclick="CalculateHashes">Calculate Hashes</button>
+
+<div>
+    <h5>Output</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Algorithm Name</th>
+                <th>Generated Hash</th>
+                <th>Time Taken (ms)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var result in hashResults)
+            {
+                <tr>
+                    <td>@result.Algorithm</td>
+                    <td class="hash-cell" 
+                        data-full-hash="@result.Hash" 
+                        onmouseover="showFullHashTooltip(this)" 
+                        onmouseout="removeFullHashTooltip()">
+                        @result.Hash
+                    </td>
+                    <td>@result.TimeTaken</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private string inputText = string.Empty;
+    private List<string> selectedAlgorithms = new();
+    private List<HashResult> hashResults = new();
+
+    private void OnAlgorithmSelected(ChangeEventArgs e)
+    {
+        var selectedAlgorithm = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(selectedAlgorithm) && !selectedAlgorithms.Contains(selectedAlgorithm))
+        {
+            selectedAlgorithms.Add(selectedAlgorithm);
+        }
+    }
+
+    private void RemoveAlgorithm(string algorithm)
+    {
+        selectedAlgorithms.Remove(algorithm);
+    }
+
+    private void CalculateHashes()
+    {
+        if (string.IsNullOrWhiteSpace(inputText))
+        {
+            Console.WriteLine("Please enter some text before calculating hashes.");
+            return;
+        }
+
+        hashResults.Clear();
+
+        foreach (var algorithm in selectedAlgorithms)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var hash = ComputeHash(inputText, algorithm);
+            stopwatch.Stop();
+
+            hashResults.Add(new HashResult
+            {
+                Algorithm = algorithm,
+                Hash = hash,
+                TimeTaken = stopwatch.Elapsed.TotalMilliseconds
+            });
+        }
+    }
+
+
+    private string ComputeHash(string input, string algorithm)
+    {
+        using HashAlgorithm hashAlgorithm = algorithm switch
+        {
+            "SHA-1" => SHA1.Create(),
+            "SHA-256" => SHA256.Create(),
+            "SHA-384" => SHA384.Create(),
+            "SHA-512" => SHA512.Create(),
+            _ => throw new NotSupportedException($"Algorithm {algorithm} is not supported")
+        };
+
+        var hashBytes = hashAlgorithm.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
+        return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+    }
+
+    private class HashResult
+    {
+        public string Algorithm { get; set; } = string.Empty;
+        public string Hash { get; set; } = string.Empty;
+        public double TimeTaken { get; set; }
+    }
+}
