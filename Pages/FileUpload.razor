@@ -1,0 +1,99 @@
+@page "/fileupload"
+@using System.Security.Cryptography
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="upload-container">
+    <h3>Check SHA-256 Hash of Your File</h3>
+
+    <InputFile OnChange="OnFileSelected" class="file-input form-control" />
+
+    @if (selectedFile != null)
+    {
+        <div class="mb-3">
+            <p>Selected File: <strong>@selectedFile.Name</strong> (@(selectedFile.Size / 1024) KB)</p>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <button class="btn btn-primary" disabled>
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Calculating...
+        </button>
+    }
+    else
+    {
+        <button class="btn btn-primary" @onclick="CalculateHash" disabled="@(selectedFile == null)">
+            Calculate Hash
+        </button>
+    }
+
+    @if (!string.IsNullOrEmpty(hashResult))
+    {
+        <div class="alert alert-info mt-3">@hashResult</div>
+    }
+</div>
+
+@code {
+    private IBrowserFile selectedFile;
+    private string hashResult;
+    private bool isLoading = false;
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        if (e.FileCount == 0)
+        {
+            hashResult = "No file selected.";
+            selectedFile = null;
+        }
+        else
+        {
+            selectedFile = e.File;
+            hashResult = string.Empty;
+        }
+    }
+
+    private async Task CalculateHash()
+    {
+        if (selectedFile == null)
+        {
+            hashResult = "Please select a file first.";
+            return;
+        }
+
+        if (selectedFile.Size > MaxFileSize)
+        {
+            hashResult = "Error: File size exceeds 10 MB limit.";
+            return;
+        }
+
+        isLoading = true;
+        hashResult = string.Empty;
+
+        try
+        {
+            using var stream = selectedFile.OpenReadStream(MaxFileSize);
+            using var sha256 = SHA256.Create();
+
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) != 0)
+            {
+                sha256.TransformBlock(buffer, 0, bytesRead, null, 0);
+            }
+            sha256.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+
+            var hashBytes = sha256.Hash;
+            hashResult = $"SHA-256 Hash: {BitConverter.ToString(hashBytes).Replace("-", "").ToLower()}";
+        }
+        catch (Exception ex)
+        {
+            hashResult = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
