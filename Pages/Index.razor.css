@@ -1,0 +1,94 @@
+/* Style for the main card container */
+.hash-card {
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+/* Style for the hash input and button section */
+.hash-input {
+    margin-bottom: 15px;
+}
+
+.compute-button {
+    margin-top: 15px;
+}
+
+/* Horizontal layout for options */
+.options-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Space between each option */
+}
+
+/* Style for the switch */
+.switch-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px; /* Consistent font size */
+}
+
+.switch-toggle {
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.switch-toggle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+/* Active state for the toggle */
+.switch-toggle.active {
+    background-color: #007bff;
+}
+
+.switch-toggle.active::before {
+    transform: translateX(20px);
+}
+
+/* Label font consistency */
+.switch-label, .encoding-label {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Inline encoding container */
+.encoding-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between label and select box */
+}
+
+/* Style for encoding select */
+.encoding-select {
+    width: 180px; /* Increase width for visibility */
+    max-width: 180px;
+    padding: 5px;
+    font-size: 16px;
+}
+
+/* Style for the hash output */
+.hash-output {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-weight: bold;
+    color: #333;
+    margin-top: 20px; /* Additional spacing to push output lower */
+}
