@@ -2,22 +2,61 @@
 @using System.Security.Cryptography
 @using System.Text
 
-<h3>SHA-256 Hash Testing App</h3>
+<h3>Encrypt Text with SHA-256</h3>
 
-<div>
-    <label>Enter text to hash:</label>
-    <input @bind="InputText" placeholder="Enter text here" />
-    <button @onclick="ComputeHash">Compute Hash</button>
+<div class="hash-card">
+    <div class="hash-input">
+        <label><strong>Enter text to hash:</strong></label>
+        <input class="form-control" @bind="InputText" @oninput="OnInputChanged" placeholder="Enter text here" />
+    </div>
+    <button class="btn btn-primary compute-button" @onclick="ComputeHash">Compute Hash</button>
+
+    <div class="options-horizontal mt-3">
+        <div class="switch-container">
+            <span class="switch-label">Auto Update</span>
+            <div class="switch-toggle @(AutoUpdate ? "active" : "")" @onclick="() => AutoUpdate = !AutoUpdate"></div>
+        </div>
+
+        <div class="encoding-inline">
+            <label class="encoding-label"><strong>Input Encoding</strong></label>
+            <select class="form-control encoding-select" @bind="InputEncoding">
+                <option value="UTF8">UTF-8</option>
+                <option value="UTF16">UTF-16</option>
+            </select>
+
+            <label class="encoding-label"><strong>Output Encoding</strong></label>
+            <select class="form-control encoding-select" @bind="OutputEncoding">
+                <option value="HexLower">Hex (Lower Case)</option>
+                <option value="HexUpper">Hex (Upper Case)</option>
+            </select>
+        </div>
+    </div>
+
+
+    @if (!string.IsNullOrEmpty(HashResult))
+    {
+        <div class="hash-output mt-4">
+            <p><strong>SHA-256 Hash:</strong> @HashResult</p>
+        </div>
+    }
 </div>
-
-@if (!string.IsNullOrEmpty(HashResult))
-{
-    <p><strong>SHA-256 Hash:</strong> @HashResult</p>
-}
 
 @code {
     private string InputText { get; set; } = string.Empty;
     private string HashResult { get; set; } = string.Empty;
+    private bool AutoUpdate { get; set; } = false;
+    private string InputEncoding { get; set; } = "UTF8";
+    private string OutputEncoding { get; set; } = "HexLower";
+
+    private void OnInputChanged(ChangeEventArgs e)
+    {
+        InputText = e.Value?.ToString() ?? string.Empty;
+
+        if (AutoUpdate)
+        {
+            ComputeHash();
+        }
+    }
 
     private void ComputeHash()
     {
@@ -26,13 +65,21 @@
 
     private string ComputeSha256Hash(string rawData)
     {
+        Encoding encoding = InputEncoding switch
+        {
+            "UTF8" => Encoding.UTF8,
+            "UTF16" => Encoding.Unicode,
+            _ => Encoding.UTF8
+        };
+
         using (SHA256 sha256Hash = SHA256.Create())
         {
-            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            byte[] bytes = sha256Hash.ComputeHash(encoding.GetBytes(rawData));
+
             StringBuilder builder = new StringBuilder();
             foreach (byte b in bytes)
             {
-                builder.Append(b.ToString("x2"));
+                builder.Append(b.ToString(OutputEncoding == "HexUpper" ? "X2" : "x2"));
             }
             return builder.ToString();
         }
